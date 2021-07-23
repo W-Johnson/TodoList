@@ -1,26 +1,80 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, {Dispatch, useEffect, useState} from 'react';
 import './App.css';
+import axios from "axios";
+import Header from "./components/Header";
+import TodoList from "./containers/todoList";
+import {TodoResponse} from "./interface";
+import AddTodo from './containers/addTodo';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+
+    let todos: TodoResponse[], setTodos: Dispatch<any>;
+    [todos, setTodos] = useState([]);
+    useEffect(() => {
+        async function asynchro() {
+            const result = await axios.get("http://localhost:1337/todos");
+           // console.log("in useEffect result = " + "$");
+            setTodos(result?.data);
+        }
+        asynchro();
+    }, []);
+    const addTodo = async () => {
+        const newTodoText = prompt("Enter new todo task:");
+        if (newTodoText != null) {
+            console.log("The text input is:" + newTodoText + "#");
+            if (newTodoText && newTodoText.length > 0) {
+                console.log("before post")
+                const result = await axios.post("http://localhost:1337/todos", {
+                    todoText: newTodoText,
+                });
+             //   window.location.reload(false);
+                setTodos([todos, result?.data]);
+                const result2 = await axios.get("http://localhost:1337/todos");
+                // console.log("in useEffect result = " + "$");
+                setTodos(result2?.data);
+
+            }
+        }
+    };
+    const deleteTodoItem = async (todo: TodoResponse) => {
+        if (window.confirm("Do you really want to delete this item?")) {
+            await axios.delete("http://localhost:1337/todos/" + todo.id);
+            const newTodos = todos.filter((_todo: TodoResponse) => _todo.id !== todo.id);
+            console.log(newTodos);
+            setTodos(newTodos);
+        }
+    };
+    const editTodoItem = async (todo: TodoResponse) => {
+        const newTodoText = prompt("Enter new todo text or description:");
+        if (newTodoText != null) {
+            const result = await axios.put("http://localhost:1337/todos/" + todo.id, {
+                todoText: newTodoText,
+            });
+            const moddedTodos = todos.map((_todo: TodoResponse) => {
+                if (_todo.id === todo.id) {
+                    return result?.data;
+                } else {
+                    return _todo;
+                }
+            });
+            setTodos(moddedTodos);
+        }
+    };
+
+    return (
+        <div className="App">
+            <title>ToDo app</title>
+            <Header/>
+            <main className="main">
+                <AddTodo add={addTodo}/>
+                <TodoList
+                    todos={todos}
+                    deleteTodoItem={deleteTodoItem}
+                    editTodoItem={editTodoItem}
+                />
+            </main>
+        </div>
+    );
 }
 
 export default App;
