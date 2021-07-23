@@ -6,6 +6,20 @@ import TodoList from "./containers/todoList";
 import {TodoResponse} from "./interface";
 import AddTodo from './containers/addTodo';
 
+import { createTheme } from '@material-ui/core/styles';
+import { ThemeProvider } from '@material-ui/styles';
+const theme = createTheme({
+    palette: {
+        primary: {
+            main: '#00BFFF',
+        },
+        secondary: {
+            main: '#FF0000'
+        },
+    },
+});
+
+
 function App() {
 
     let todos: TodoResponse[], setTodos: Dispatch<any>;
@@ -13,7 +27,6 @@ function App() {
     useEffect(() => {
         async function asynchro() {
             const result = await axios.get("http://localhost:1337/todos");
-           // console.log("in useEffect result = " + "$");
             setTodos(result?.data);
         }
         asynchro();
@@ -27,10 +40,8 @@ function App() {
                 const result = await axios.post("http://localhost:1337/todos", {
                     todoText: newTodoText,
                 });
-             //   window.location.reload(false);
                 setTodos([todos, result?.data]);
                 const result2 = await axios.get("http://localhost:1337/todos");
-                // console.log("in useEffect result = " + "$");
                 setTodos(result2?.data);
 
             }
@@ -66,12 +77,15 @@ function App() {
             <title>ToDo app</title>
             <Header/>
             <main className="main">
+                <ThemeProvider theme={theme}>
+
                 <AddTodo add={addTodo}/>
                 <TodoList
                     todos={todos}
                     deleteTodoItem={deleteTodoItem}
                     editTodoItem={editTodoItem}
                 />
+                </ThemeProvider>
             </main>
         </div>
     );
